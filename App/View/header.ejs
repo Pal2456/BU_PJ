@@ -1,0 +1,163 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <style>
+    body {
+        font-family: 'Helvetica Neue', sans-serif;
+        background: #f9fafb;
+        color: #333;
+        padding: 20px;
+    }
+    h1, h2, h3 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .page {
+        display: none;
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .active {
+        display: block;
+    }
+    input, button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    button {
+        background: #4f46e5;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background: #4338ca;
+    }
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        margin-top: 20px;
+    }
+    .slot {
+        padding: 10px;
+        background: #f1f5f9;
+        border-radius: 6px;
+        text-align: center;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin: 5px;
+    }
+    .slot.selected {
+        background: #c7d2fe;
+    }
+    .slot.past {
+        background: #e2e8f0;
+        color: #aaa;
+        pointer-events: none;
+    }
+    .slot.common {
+        background: #4ade80; /* Brighter green for better visibility */
+        color: #333;
+        font-weight: bold;
+        border: 2px solid #16a34a; /* Add border for emphasis */
+    }
+    .intersection-container {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f0fff4; /* Light green background */
+        border-radius: 8px;
+        border: 1px solid #dcfce7;
+    }
+    .intersection-title {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #16a34a; /* Matching green color */
+        font-size: 1.2rem;
+    }
+    .intersection-slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .intersection-slot {
+        padding: 8px 12px;
+        background: #4ade80; /* Matching green */
+        border-radius: 6px;
+        font-weight: bold;
+        border: 2px solid #16a34a;
+    }
+    .no-intersection {
+        color: #666;
+        font-style: italic;
+    }
+    .invite-list {
+        margin-top: 20px;
+    }
+    .invite-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f3f4f6;
+        padding: 8px;
+        margin-bottom: 5px;
+        border-radius: 6px;
+    }
+    .signup-prompt, .login-prompt {
+        text-align: center;
+        margin-top: 10px;
+    }
+    .legend {
+        display: flex;
+        justify-content: center;
+        margin: 15px 0;
+        gap: 15px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+        border-radius: 3px;
+    }
+    .legend-selected {
+        background: #c7d2fe;
+    }
+    .legend-common {
+        background: #4ade80;
+        border: 1px solid #16a34a;
+    }
+    .legend-past {
+        background: #e2e8f0;
+        color: #aaa;
+    }
+    .time-slots-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .error-message {
+        color: #dc2626;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        text-align: center;
+    }
+  </style>
+</head>
+<body>
