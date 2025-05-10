@@ -1,10 +1,6 @@
-res.render('index', {
-  pageId: 'meeting-detail',
-  meeting: meeting,   // ✅ ต้องส่งให้
-  currentUser: req.session.user.gmail,
-  commonSlots,
-  userPreferences
-});
+const express = require('express');
+const router = express.Router(); // ✅ สำคัญมาก
+const db = require('../connect1');
 
 
 // Route/user.js หรือ meeting.js
@@ -27,10 +23,11 @@ router.get('/create', (req, res) => {
 router.post('/create', async (req, res) => {
   const { title } = req.body;
   const date = new Date().toISOString().split('T')[0];
-  await db.query('INSERT INTO meetings (title, owner, date) VALUES (?, ?, ?)', [
+  await db.query('INSERT INTO meeting (host_id, title, created_at) VALUES (?, ?, ?)', [
     title,
     req.session.user.gmail,
     date
   ]);
   res.redirect('/meetings');
 });
+module.exports = router;
