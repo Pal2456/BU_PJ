@@ -75,7 +75,7 @@
 </div>
 
 <!-- Meeting Detail Page -->
-<div id="meetingDetailPage" class="page <%= pageId === 'meeting-detail' ? 'active' : '' %>">
+<div id="meetingDetailPage" class="page <%= safePageId === 'meeting-detail' ? 'active' : '' %>">
   <h2>Meeting Details</h2>
   <div id="meetingInfo">
     <% if (meeting) { %>
