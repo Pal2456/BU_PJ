@@ -1,55 +1,42 @@
-<%- include('header.ejs', {title: 'Meeting Time Arrangement App'}) %>
+<%- include('header.ejs', { title: 'Meeting Time Arrangement App' }) %>
 
 <%
-  // Don't redeclare! Use `typeof` only, no `let`/`const` if exists already.
-  if (typeof safeMeetings === 'undefined') {
-    var safeMeetings = typeof meetings !== 'undefined' ? meetings : [];
-    var safeMeeting = typeof meeting !== 'undefined' ? meeting : null;
-    var safeCommonSlots = typeof commonSlots !== 'undefined' ? commonSlots : [];
-    var safeUserPreferences = typeof userPreferences !== 'undefined' ? userPreferences : [];
-    var safeCurrentUser = typeof currentUser !== 'undefined' ? currentUser : null;
-  }
+  var safeMeetings = (typeof meetings !== 'undefined') ? meetings : [];
+  var safeMeeting = (typeof meeting !== 'undefined') ? meeting : null;
+  var safeCommonSlots = (typeof commonSlots !== 'undefined') ? commonSlots : [];
+  var safeUserPreferences = (typeof userPreferences !== 'undefined') ? userPreferences : [];
+  var safeCurrentUser = (typeof currentUser !== 'undefined') ? currentUser : null;
+  var safePageId = (typeof pageId !== 'undefined') ? pageId : '';
 %>
-
 
 <h1>Meeting Time Arrangement</h1>
 
-<!-- Login Page -->
-<div id="loginPage" class="page active">
+<div id="loginPage" class="page <%= safePageId === 'login' ? 'active' : '' %>">
   <h2>Login</h2>
   <form action="/login" method="POST">
-    <input type="text" id="loginUsername" name="username" placeholder="Username">
-    <input type="password" id="loginPassword" name="password" placeholder="Password">
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
     <button type="submit">Login</button>
   </form>
-  <div class="signup-prompt">
-    <p>Don't have an account?</p>
-    <a href="/signup"><button>Sign Up</button></a>
-  </div>
+  <p>Don't have an account? <a href="/signup">Sign Up</a></p>
 </div>
 
-<!-- Signup Page -->
-<div id="signupPage" class="page <%= pageId === 'signup' ? 'active' : '' %>">
+<div id="signupPage" class="page <%= safePageId === 'signup' ? 'active' : '' %>">
   <h2>Sign Up</h2>
   <form action="/signup" method="POST">
-    <input type="text" id="signupUsername" name="username" placeholder="Username">
-    <input type="password" id="signupPassword" name="password" placeholder="Password">
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
     <button type="submit">Sign Up</button>
   </form>
-  <div class="login-prompt">
-    <p>Already have an account?</p>
-    <a href="/login"><button>Back</button></a>
-  </div>
+  <p>Already have an account? <a href="/login">Login</a></p>
 </div>
 
-<!-- Dashboard Page -->
-<div id="dashboardPage" class="page <%= pageId === 'dashboard' ? 'active' : '' %>">
+<div id="dashboardPage" class="page <%= safePageId === 'dashboard' ? 'active' : '' %>">
   <h2>Dashboard</h2>
+  
   <a href="/meetings/create"><button>Create Meeting</button></a>
   <a href="/meetings"><button>View Meetings</button></a>
-  <form action="/logout" method="POST">
-    <button type="submit">Logout</button>
-  </form>
+  <form action="/logout" method="POST"><button type="submit">Logout</button></form>
 </div>
 
 <!-- Create Meeting Page -->
@@ -66,8 +53,8 @@
 <div id="meetingListPage" class="page <%= pageId === 'meeting-list' ? 'active' : '' %>">
   <h2>Meetings</h2>
   <div id="meetingList">
-    <% if (safeMeetings.length > 0) { %>
-      <% safeMeetings.forEach(...) %>
+    <% if (meetings && meetings.length > 0) { %>
+      <% meetings.forEach(meeting => { %>
         <div class="invite-item">
           <span><%= meeting.title %> (<%= meeting.date %>)</span>
           <div>
@@ -120,8 +107,9 @@
       <% } %>
     <% } %>
   </div>
-  
+
   <h3>Available Time Slots</h3>
+  <!-- Legend for time slots -->
   <div class="legend">
     <div class="legend-item">
       <div class="legend-color legend-selected"></div>
@@ -143,9 +131,9 @@
         <div class="time-slots-container">
           <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; %>
           <% allSlots.forEach(time => { 
-              const isPast = isPastTime ? isPastTime(time) : false;
+              const isPast = isPastTime(time);
               const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
-              const isCommon = commonSlots.includes(time);
+              const isCommon = commonSlots && commonSlots.includes(time);
           %>
             <div class="slot <%= isPast ? 'past' : '' %> <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>">
               <%= time %>
@@ -161,22 +149,23 @@
     <% } %>
   </div>
 
+  <!-- Section for intersection time slots -->
   <div class="intersection-container">
     <h3 class="intersection-title">Common Available Times</h3>
     <div id="intersectionSlots" class="intersection-slots">
       <% if (meeting) { %>
-        <% if (commonSlots.length > 0) { %>
+        <% if (commonSlots && commonSlots.length > 0) { %>
           <% commonSlots.forEach(time => { %>
             <div class="intersection-slot"><%= time %></div>
           <% }); %>
-        <% } else if (userPreferences.length === 1) { %>
+        <% } else if (userPreferences && userPreferences.length === 1) { %>
           <p class="no-intersection">Only one participant has set preferences. Showing their available times.</p>
           <% userPreferences[0].forEach(time => { 
-               if (!isPastTime || !isPastTime(time)) { %>
+               if (!isPastTime(time)) { %>
                 <div class="intersection-slot"><%= time %></div>
               <% } %>
           <% }); %>
-        <% } else if (userPreferences.length > 0) { %>
+        <% } else if (userPreferences && userPreferences.length > 0) { %>
           <p class="no-intersection">No common time slots available yet</p>
         <% } else { %>
           <p class="no-intersection">No preferences set by any participants yet</p>
@@ -185,6 +174,7 @@
     </div>
   </div>
 
+  <!-- Invite Users section (only visible to meeting owner) -->
   <% if (meeting && currentUser === meeting.owner) { %>
     <div id="inviteSection">
       <h3>Invite Users</h3>
@@ -197,20 +187,4 @@
 
   <a href="/meetings"><button>Back</button></a>
 </div>
-
-<%- include('partials/footer.ejs') %>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const slots = document.querySelectorAll('.slot');
-    slots.forEach(slot => {
-      if (!slot.classList.contains('past')) {
-        slot.addEventListener('click', function() {
-          this.classList.toggle('selected');
-          const checkbox = this.querySelector('input[type="checkbox"]');
-          if (checkbox) checkbox.checked = !checkbox.checked;
-        });
-      }
-    });
-  });
-</script>
+<%- include('footer.ejs') %>
