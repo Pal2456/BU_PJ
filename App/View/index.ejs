@@ -1,9 +1,17 @@
 <%- include('header.ejs', {title: 'Meeting Time Arrangement App'}) %>
 
+<%
+  var meeting = typeof meeting !== 'undefined' ? meeting : null;
+  var meetings = typeof meetings !== 'undefined' ? meetings : [];
+  var userPreferences = typeof userPreferences !== 'undefined' ? userPreferences : [];
+  var commonSlots = typeof commonSlots !== 'undefined' ? commonSlots : [];
+%>
+
+
 <h1>Meeting Time Arrangement</h1>
 
 <!-- Login Page -->
-<div id="loginPage" class="page active">
+<div id="loginPage" class="page <%= pageId === 'login' ? 'active' : '' %>">
   <h2>Login</h2>
   <form action="/login" method="POST">
     <input type="text" id="loginUsername" name="username" placeholder="Username">
@@ -75,17 +83,17 @@
   <a href="/dashboard"><button>Back</button></a>
 </div>
 
-<!-- Meeting Detail Page -->
+<<!-- Meeting Detail Page -->
 <div id="meetingDetailPage" class="page <%= pageId === 'meeting-detail' ? 'active' : '' %>">
   <h2>Meeting Details</h2>
   <div id="meetingInfo">
-    <% if (meeting) { %>
+    <% if (typeof meeting !== 'undefined' && meeting) { %>
       <p><strong>Title:</strong> <%= meeting.title %></p>
-      <p><strong>Date:</strong> <%= meeting.date %></p>
-      <p><strong>Owner:</strong> <%= meeting.owner %></p>
+      <p><strong>Date:</strong> <%= meeting.date || 'N/A' %></p>
+      <p><strong>Owner:</strong> <%= meeting.owner || 'Unknown' %></p>
       <p><strong>Invitees:</strong></p>
       
-      <% if (meeting.invites && meeting.invites.length > 0) { %>
+      <% if (Array.isArray(meeting.invites) && meeting.invites.length > 0) { %>
         <ul>
           <% meeting.invites.forEach(invite => { %>
             <li>
@@ -106,49 +114,57 @@
       <% } else { %>
         <p>No invitees yet</p>
       <% } %>
+    <% } else { %>
+      <p><em>No meeting selected.</em></p>
     <% } %>
   </div>
+</div>
+
   
   <h3>Available Time Slots</h3>
-  <!-- Legend for time slots -->
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-color legend-selected"></div>
-      <span>Your Selection</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color legend-common"></div>
-      <span>Common Available Times</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color legend-past"></div>
-      <span>Past Times (Not Available)</span>
-    </div>
+<!-- Legend for time slots -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-color legend-selected"></div>
+    <span>Your Selection</span>
   </div>
-  
-  <div id="timeSlots">
-    <% if (meeting) { %>
-      <form action="/meetings/<%= meeting.id %>/availability" method="POST">
-        <div class="time-slots-container">
-          <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; %>
-          <% allSlots.forEach(time => { 
-              const isPast = isPastTime(time);
-              const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
-              const isCommon = commonSlots && commonSlots.includes(time);
-          %>
-            <div class="slot <%= isPast ? 'past' : '' %> <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>">
-              <%= time %>
-              <% if (!isPast) { %>
-                <input type="checkbox" name="selectedSlots" value="<%= time %>" 
-                       <%= isSelected ? 'checked' : '' %> style="display:none;">
-              <% } %>
-            </div>
-          <% }); %>
-        </div>
-        <button type="submit">Save Availability</button>
-      </form>
-    <% } %>
+  <div class="legend-item">
+    <div class="legend-color legend-common"></div>
+    <span>Common Available Times</span>
   </div>
+  <div class="legend-item">
+    <div class="legend-color legend-past"></div>
+    <span>Past Times (Not Available)</span>
+  </div>
+</div>
+
+<div id="timeSlots">
+  <% if (typeof meeting !== 'undefined' && meeting) { %>
+    <form action="/meetings/<%= meeting.id %>/availability" method="POST">
+      <div class="time-slots-container">
+        <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; %>
+        <% allSlots.forEach(time => {
+            const isPast = typeof isPastTime === 'function' ? isPastTime(time) : false;
+            const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
+            const isCommon = commonSlots && commonSlots.includes(time);
+        %>
+          <div class="slot <%= isPast ? 'past' : '' %> <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>">
+            <%= time %>
+            <% if (!isPast) { %>
+              <input type="checkbox" name="selectedSlots" value="<%= time %>" 
+                     <%= isSelected ? 'checked' : '' %> style="display:none;">
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+      <button type="submit">Save Availability</button>
+    </form>
+  <% } else { %>
+    <p style="color: gray;">No meeting selected.</p>
+  <% } %>
+</div>
+
+
 
   <!-- Section for intersection time slots -->
   <div class="intersection-container">

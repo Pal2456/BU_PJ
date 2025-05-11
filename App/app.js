@@ -25,8 +25,7 @@ const userRoutes = require('./Route/user');
 app.use('/', mainRoutes);
 app.use('/meetings', userRoutes);
 
-const meetingRoutes = require('./Route/meeting');
-app.use('/meetings', meetingRoutes);
+
 // Start server
 app.listen(3000, () => {
   console.log('Server running at http://localhost:3000');

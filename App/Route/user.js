@@ -1,21 +1,19 @@
-// Route/user.js
 const express = require('express');
 const router = express.Router();
 const db = require('../connect1');
-
 
 router.get('/', (req, res) => {
   res.redirect('/login');
 });
 
 // View All Meetings for User
-router.get('/', async (req, res) => {
+router.get('/meetings', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   const [invites] = await db.query(`
     SELECT m.*, i.status FROM meeting m
-    JOIN invitation i ON m.meeting_id = i.meeting_id
-    WHERE i.user_id = ?
-  `, [req.session.user.user_id]);
+    JOIN invitation i ON m.id = i.meeting_id
+    WHERE i.invitee_gmail = ?
+  `, [req.session.user.gmail]);
   res.render('index', {
     pageId: 'meeting-list',
     meetings: invites,
@@ -24,101 +22,98 @@ router.get('/', async (req, res) => {
 });
 
 // Create Meeting
-router.post('/create', async (req, res) => {
+router.get('/meetings/create', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
+  res.render('index', {
+    pageId: 'create-meeting',
+    currentUser: req.session.user.gmail
+  });
+});
+
+router.post('/meetings/create', async (req, res) => {
   const { title } = req.body;
-  await db.query('INSERT INTO meeting (title, host_id) VALUES (?, ?)', [title, req.session.user.user_id]);
-  res.redirect('/dashboard');
+  const ownerGmail = req.session.user.gmail;
+  await db.query('INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)', [title, ownerGmail]);
+  res.redirect('/meetings');
 });
 
 // View Meeting Detail
-router.get('/:id', async (req, res) => {
+router.get('/meetings/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   const meetingId = req.params.id;
 
-  const [[meeting]] = await db.query(`
-    SELECT m.*, u.gmail AS owner FROM meeting m
-    JOIN user u ON m.host_id = u.user_id
-    WHERE m.meeting_id = ?
-  `, [meetingId]);
+  const [[meeting]] = await db.query('SELECT * FROM meeting WHERE id = ?', [meetingId]);
 
   const [invites] = await db.query(`
-    SELECT i.*, u.gmail AS username FROM invitation i
-    JOIN user u ON i.user_id = u.user_id
-    WHERE i.meeting_id = ?
+    SELECT * FROM invitation WHERE meeting_id = ?
   `, [meetingId]);
+  meeting.invites = invites;
 
-  const [availabilities] = await db.query(`
-    SELECT * FROM availability WHERE meeting_id = ?
-  `, [meetingId]);
+  const [availabilities] = await db.query('SELECT * FROM availability WHERE meeting_id = ?', [meetingId]);
 
-  // Transform to user -> slots
   const slots = {};
-  const userPrefs = {};
   for (const row of availabilities) {
-    const userId = row.user_id;
-    const time = row.time_slot.toISOString().substr(11, 5);
-    if (!slots[userId]) slots[userId] = [];
-    slots[userId].push(time);
+    const user = row.user_gmail;
+    const time = row.time_slot;
+    if (!slots[user]) slots[user] = [];
+    slots[user].push(time);
   }
 
   const userPreferences = Object.values(slots);
   const commonSlots = userPreferences.length > 1
     ? userPreferences.reduce((a, b) => a.filter(v => b.includes(v)))
-    : [];
+    : userPreferences[0] || [];
+
+  meeting.slots = slots;
 
   res.render('index', {
     pageId: 'meeting-detail',
     meeting,
     currentUser: req.session.user.gmail,
     userPreferences,
-    commonSlots,
+    commonSlots
   });
 });
 
 // Invite Users
-router.post('/:id/invite', async (req, res) => {
+router.post('/meetings/:id/invite', async (req, res) => {
   const meetingId = req.params.id;
   const usernames = req.body.invitees.split(',').map(u => u.trim());
   for (const name of usernames) {
-    const [[user]] = await db.query('SELECT * FROM user WHERE gmail = ?', [name]);
-    if (user) {
-      await db.query('INSERT IGNORE INTO invitation (meeting_id, user_id) VALUES (?, ?)', [meetingId, user.user_id]);
-    }
+    await db.query('INSERT IGNORE INTO invitation (meeting_id, invitee_gmail, status) VALUES (?, ?, ?)', [meetingId, name, 'pending']);
   }
   res.redirect(`/meetings/${meetingId}`);
 });
 
 // Respond to Invite
-router.post('/:id/respond', async (req, res) => {
+router.post('/meetings/:id/respond', async (req, res) => {
   const meetingId = req.params.id;
+  const userGmail = req.session.user.gmail;
   const status = req.body.status;
-  const userId = req.session.user.user_id;
-  await db.query('UPDATE invitation SET status = ? WHERE meeting_id = ? AND user_id = ?', [status, meetingId, userId]);
+  await db.query('UPDATE invitation SET status = ? WHERE meeting_id = ? AND invitee_gmail = ?', [status, meetingId, userGmail]);
   res.redirect(`/meetings/${meetingId}`);
 });
 
 // Save Availability
-router.post('/:id/availability', async (req, res) => {
+router.post('/meetings/:id/availability', async (req, res) => {
   const meetingId = req.params.id;
-  const userId = req.session.user.user_id;
+  const userGmail = req.session.user.gmail;
   const slots = req.body.selectedSlots || [];
 
-  await db.query('DELETE FROM availability WHERE meeting_id = ? AND user_id = ?', [meetingId, userId]);
+  await db.query('DELETE FROM availability WHERE meeting_id = ? AND user_gmail = ?', [meetingId, userGmail]);
 
   const insertValues = Array.isArray(slots) ? slots : [slots];
   for (const time of insertValues) {
-    const fullTime = `2025-01-01 ${time}:00`; // dummy date
-    await db.query('INSERT INTO availability (meeting_id, user_id, time_slot) VALUES (?, ?, ?)', [meetingId, userId, fullTime]);
+    await db.query('INSERT INTO availability (meeting_id, user_gmail, time_slot) VALUES (?, ?, ?)', [meetingId, userGmail, time]);
   }
 
   res.redirect(`/meetings/${meetingId}`);
 });
 
 // Delete Meeting
-router.post('/:id/delete', async (req, res) => {
+router.post('/meetings/:id/delete', async (req, res) => {
   const meetingId = req.params.id;
-  await db.query('DELETE FROM meeting WHERE meeting_id = ?', [meetingId]);
+  await db.query('DELETE FROM meeting WHERE id = ?', [meetingId]);
   res.redirect('/meetings');
 });
 

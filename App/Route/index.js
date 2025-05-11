@@ -8,14 +8,19 @@ router.get('/', (req, res) => {
   res.redirect('/login');
 });
 
+
 // ✅ Login Page
 router.get('/login', (req, res) => {
   res.render('index', {
     pageId: 'login',
     currentUser: null,
-    meetings: [] // ป้องกัน error ใน EJS
+    meetings: [],
+    meeting: null,
+    userPreferences: [],
+    commonSlots: []
   });
 });
+
 
 // ✅ Login Process
 router.post('/login', async (req, res) => {
@@ -38,9 +43,13 @@ router.get('/signup', (req, res) => {
   res.render('index', {
     pageId: 'signup',
     currentUser: null,
-    meetings: []
+    meetings: [],
+    meeting: null,
+    userPreferences: [],
+    commonSlots: []
   });
 });
+
 
 // ✅ Signup Process
 router.post('/signup', async (req, res) => {
@@ -59,9 +68,13 @@ router.get('/dashboard', (req, res) => {
   res.render('index', {
     pageId: 'dashboard',
     currentUser: req.session.user.gmail,
-    meetings: [] // ป้องกัน error จาก .forEach
+    meetings: [],
+    meeting: null,
+    userPreferences: [],
+    commonSlots: []
   });
 });
+
 
 // ✅ Logout
 router.post('/logout', (req, res) => {
