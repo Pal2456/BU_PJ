@@ -9,33 +9,76 @@ router.get('/', (req, res) => {
 // View All Meetings for User
 router.get('/meetings', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
+
   const [invites] = await db.query(`
     SELECT m.*, i.status FROM meeting m
     JOIN invitation i ON m.id = i.meeting_id
     WHERE i.invitee_gmail = ?
   `, [req.session.user.gmail]);
+
   res.render('index', {
-    pageId: 'meeting-list',
+    pageId: 'meeting-list', // ✅ ใส่ให้ชัดเจน
+    currentUser: req.session.user.gmail,
     meetings: invites,
-    currentUser: req.session.user.gmail
+    meeting: null,
+    userPreferences: [],
+    commonSlots: []
+
   });
+  
+
 });
+
 
 // Create Meeting
 router.get('/meetings/create', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
+  console.log("Rendering create-meeting page");
+  res.render('index', {
+  pageId: 'create-meeting',
+  currentUser: ownerGmail,
+  meetings: [],
+  meeting: null,
+  userPreferences: [],
+  commonSlots: []
+});
+});
+
+router.get('/createMeetingPage', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+
   res.render('index', {
     pageId: 'create-meeting',
-    currentUser: req.session.user.gmail
+    currentUser: req.session.user.gmail,
+    meetings: [],
+    meeting: null,
+    userPreferences: [],
+    commonSlots: []
   });
 });
 
+// Route/user.js
 router.post('/meetings/create', async (req, res) => {
   const { title } = req.body;
   const ownerGmail = req.session.user.gmail;
-  await db.query('INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)', [title, ownerGmail]);
-  res.redirect('/meetings');
+
+  await db.query(
+    'INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)',
+    [title, ownerGmail]
+  );
+
+  // ✅ กลับไปหน้า create-meeting อีกครั้ง
+  res.render('index', {
+    pageId: 'create-meeting',
+    currentUser: ownerGmail,
+    meetings: [],
+    meeting: null,
+    userPreferences: [],
+    commonSlots: []
+  });
 });
+
+
 
 // View Meeting Detail
 router.get('/meetings/:id', async (req, res) => {

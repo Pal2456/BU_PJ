@@ -42,6 +42,7 @@
 <div id="dashboardPage" class="page <%= pageId === 'dashboard' ? 'active' : '' %>">
   <h2>Dashboard</h2>
   <a href="/meetings/create"><button>Create Meeting</button></a>
+
   <a href="/meetings"><button>View Meetings</button></a>
   <form action="/logout" method="POST">
     <button type="submit">Logout</button>
@@ -85,6 +86,7 @@
 
 <<!-- Meeting Detail Page -->
 <div id="meetingDetailPage" class="page <%= pageId === 'meeting-detail' ? 'active' : '' %>">
+
   <h2>Meeting Details</h2>
   <div id="meetingInfo">
     <% if (typeof meeting !== 'undefined' && meeting) { %>
@@ -123,6 +125,7 @@
   
   <h3>Available Time Slots</h3>
 <!-- Legend for time slots -->
+
 <div class="legend">
   <div class="legend-item">
     <div class="legend-color legend-selected"></div>
