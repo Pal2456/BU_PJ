@@ -133,10 +133,7 @@
       <p><em>No meeting selected.</em></p>
     <% } %>
   </div>
-</div>
-
-  
-  <h3>Available Time Slots</h3>
+  <h2>Available Time Slots</h2>
 <!-- Legend for time slots -->
 
 <div class="legend">
@@ -158,18 +155,16 @@
   <% if (typeof meeting !== 'undefined' && meeting) { %>
     <form action="/meetings/<%= meeting.meeting_id %>/availability" method="POST">
       <div class="time-slots-container">
-        <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; %>
+        <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "23:00"]; %>
         <% allSlots.forEach(time => {
-            const isPast = typeof isPastTime === 'function' ? isPastTime(time) : false;
+           
             const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
             const isCommon = commonSlots && commonSlots.includes(time);
         %>
-          <div class="slot <%= isPast ? 'past' : '' %> <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>">
+          <div class="slot <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>" data-time="<%= time %>">
             <%= time %>
-            <% if (!isPast) { %>
-              <input type="checkbox" name="selectedSlots" value="<%= time %>" 
-                     <%= isSelected ? 'checked' : '' %> style="display:none;">
-            <% } %>
+            <input type="checkbox" name="selectedSlots" value="<%= time %>" 
+                   <%= isSelected ? 'checked' : '' %> style="display:none;">
           </div>
         <% }); %>
       </div>
@@ -179,6 +174,7 @@
     <p style="color: gray;">No meeting selected.</p>
   <% } %>
 </div>
+
 
 
 
@@ -220,6 +216,10 @@
 
   <a href="/meetings"><button>Back</button></a>
 </div>
+</div>
+
+  
+
 
 <%- include('footer.ejs') %>
 
@@ -246,3 +246,33 @@
     });
   });
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    document.querySelectorAll('.slot').forEach(slot => {
+      const checkbox = slot.querySelector('input[type="checkbox"]');
+      const timeStr = slot.dataset.time;
+      const [h, m] = timeStr.split(":").map(Number);
+      const slotMinutes = h * 60 + m;
+
+      const isPast = slotMinutes <= currentMinutes;
+
+      if (isPast) {
+        slot.classList.add('past');
+        checkbox.disabled = true;
+        checkbox.checked = false;
+      }
+
+      // Enable click to toggle only if not past
+      slot.addEventListener('click', () => {
+        if (slot.classList.contains('past')) return;
+        checkbox.checked = !checkbox.checked;
+        slot.classList.toggle('selected', checkbox.checked);
+      });
+    });
+  });
+</script>
+
