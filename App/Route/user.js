@@ -145,9 +145,21 @@ router.post('/:id/respond', async (req, res) => {
   const meetingId = req.params.id;
   const userGmail = req.session.user.gmail;
   const status = req.body.status;
-  await db.query('UPDATE invitation SET status = ? WHERE meeting_id = ? AND invitee_gmail = ?', [status, meetingId, userGmail]);
-  res.redirect(`/meetings/${meetingId}`);
+
+  await db.query(
+    'UPDATE invitation SET status = ? WHERE meeting_id = ? AND invitee_gmail = ?',
+    [status, meetingId, userGmail]
+  );
+
+  if (status === 'declined') {
+    // 🟥 ปฏิเสธ → กลับไปหน้า list
+    res.redirect('/meetings');
+  } else {
+    // ✅ ตอบรับ → ไปดูรายละเอียดต่อ
+    res.redirect(`/meetings/${meetingId}`);
+  }
 });
+
 
 // Save Availability
 router.get('/:id/availability', async (req, res) => {

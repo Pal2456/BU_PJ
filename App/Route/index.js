@@ -52,14 +52,42 @@ router.get('/signup', (req, res) => {
 
 
 // ✅ Signup Process
+// ✅ Signup Process
+// ✅ Signup Process with popup alert
 router.post('/signup', async (req, res) => {
   const { username, password } = req.body;
-  await db.query(
-    'INSERT INTO user (gmail, password) VALUES (?, ?)',
-    [username, password]
-  );
-  res.redirect('/login');
+
+  try {
+    const [existing] = await db.query('SELECT * FROM user WHERE gmail = ?', [username]);
+
+    if (existing.length > 0) {
+      // ถ้ามี user ซ้ำ → ส่ง script alert กลับไป
+      return res.send(`
+        <script>
+          alert("บัญชี Gmail นี้มีอยู่แล้ว กรุณาใช้บัญชีอื่น");
+          window.location.href = "/signup";
+        </script>
+      `);
+    }
+
+    await db.query(
+      'INSERT INTO user (gmail, password) VALUES (?, ?)',
+      [username, password]
+    );
+
+    res.redirect('/login');
+  } catch (err) {
+    console.error(err);
+    res.send(`
+      <script>
+        alert("เกิดข้อผิดพลาดในระบบ: ${err.message}");
+        window.location.href = "/signup";
+      </script>
+    `);
+  }
 });
+
+
 
 // ✅ Dashboard Page
 router.get('/dashboard', (req, res) => {

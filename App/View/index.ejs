@@ -155,7 +155,7 @@
   <% if (typeof meeting !== 'undefined' && meeting) { %>
     <form action="/meetings/<%= meeting.meeting_id %>/availability" method="POST">
       <div class="time-slots-container">
-        <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "23:00"]; %>
+        <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "23:20", "23:10", "23:00"]; %>
         <% allSlots.forEach(time => {
            
             const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
@@ -163,8 +163,10 @@
         %>
           <div class="slot <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>" data-time="<%= time %>">
             <%= time %>
+            
             <input type="checkbox" name="selectedSlots" value="<%= time %>" 
                    <%= isSelected ? 'checked' : '' %> style="display:none;">
+            
           </div>
         <% }); %>
       </div>
@@ -178,30 +180,28 @@
 
 
 
-  <!-- Section for intersection time slots -->
   <div class="intersection-container">
-    <h3 class="intersection-title">Common Available Times</h3>
-    <div id="intersectionSlots" class="intersection-slots">
-      <% if (meeting) { %>
-        <% if (commonSlots && commonSlots.length > 0) { %>
-          <% commonSlots.forEach(time => { %>
-            <div class="intersection-slot"><%= time %></div>
-          <% }); %>
-        <% } else if (userPreferences && userPreferences.length === 1) { %>
-          <p class="no-intersection">Only one participant has set preferences. Showing their available times.</p>
-          <% userPreferences[0].forEach(time => { 
-               if (!isPastTime(time)) { %>
-                <div class="intersection-slot"><%= time %></div>
-              <% } %>
-          <% }); %>
-        <% } else if (userPreferences && userPreferences.length > 0) { %>
-          <p class="no-intersection">No common time slots available yet</p>
-        <% } else { %>
-          <p class="no-intersection">No preferences set by any participants yet</p>
-        <% } %>
+  <h3 class="intersection-title">Common Available Times</h3>
+  <div id="intersectionSlots" class="intersection-slots">
+    <% if (meeting) { %>
+      <% if (commonSlots && commonSlots.length > 0) { %>
+        <% commonSlots.forEach(time => { %>
+          <div class="intersection-slot" data-time="<%= time %>"><%= time %></div>
+        <% }); %>
+      <% } else if (userPreferences && userPreferences.length === 1) { %>
+        <p class="no-intersection">Only one participant has set preferences. Showing their available times.</p>
+        <% userPreferences[0].forEach(time => { %>
+          <div class="intersection-slot" data-time="<%= time %>"><%= time %></div>
+        <% }); %>
+      <% } else if (userPreferences && userPreferences.length > 0) { %>
+        <p class="no-intersection">No common time slots available yet</p>
+      <% } else { %>
+        <p class="no-intersection">No preferences set by any participants yet</p>
       <% } %>
-    </div>
+    <% } %>
   </div>
+</div>
+
 
   <!-- Invite Users section (only visible to meeting owner) -->
   <% if (meeting && currentUser === meeting.owner_gmail) { %>
@@ -224,28 +224,7 @@
 <%- include('footer.ejs') %>
 
 <!-- This would be in your main.js or a separate javascript file -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Get all slot elements
-    const slots = document.querySelectorAll('.slot');
-    
-    // Add click event listener to each slot
-    slots.forEach(slot => {
-      if (!slot.classList.contains('past')) {
-        slot.addEventListener('click', function() {
-          // Toggle selected class for visual feedback
-          this.classList.toggle('selected');
-          
-          // Toggle checkbox state
-          const checkbox = this.querySelector('input[type="checkbox"]');
-          if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-          }
-        });
-      }
-    });
-  });
-</script>
+
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
