@@ -62,23 +62,37 @@
 <div id="meetingListPage" class="page <%= pageId === 'meeting-list' ? 'active' : '' %>">
   <h2>Meetings</h2>
   <div id="meetingList">
-    <% if (meetings && meetings.length > 0) { %>
-      <% meetings.forEach(meeting => { %>
-        <div class="invite-item">
-          <span><%= meeting.title %> (<%= meeting.date %>)</span>
-          <div>
-            <a href="/meetings/<%= meeting.id %>"><button>Open</button></a>
-            <% if (meeting.owner === currentUser) { %>
-              <form action="/meetings/<%= meeting.id %>/delete" method="POST" style="display:inline">
-                <button type="submit">Delete</button>
-              </form>
-            <% } %>
-          </div>
+    <% meetings.forEach(meeting => {
+     if (!meeting) return;
+%>
+  <% if (meeting.status === 'declined') return; %> <!-- Hide declined -->
+
+  <div class="invite-item">
+    <span><%= meeting.title %></span>
+    <div>
+      <% if (meeting.owner_gmail === currentUser) { %>
+        <!-- 🧑‍💼 Owner sees Open + Delete -->
+        <a href="/meetings/<%= meeting.meeting_id %>"><button>Open</button></a>
+        <form action="/meetings/<%= meeting.meeting_id %>/delete" method="POST" style="display:inline">
+          <button type="submit">Delete</button>
+        </form>
+      <% } else if (meeting.status === 'pending') { %>
+        <!-- 🤝 Invited user sees Accept/Decline -->
+        <form action="/meetings/<%= meeting.meeting_id %>/respond" method="POST" style="display:inline">
+          <input type="hidden" name="status" value="accepted">
+          <button type="submit">Accept</button>
+        </form>
+        <form action="/meetings/<%= meeting.meeting_id %>/respond" method="POST" style="display:inline">
+          <input type="hidden" name="status" value="declined">
+          <button type="submit">Decline</button>
+        </form>
+      <% } else if (meeting.status === 'accepted') { %>
+        <!-- ✅ Accepted user sees Open only -->
+        <a href="/meetings/<%= meeting.meeting_id %>"><button>Open</button></a>
+      <% } %>
         </div>
-      <% }) %>
-    <% } else { %>
-      <p>No meetings found</p>
-    <% } %>
+      </div>
+    <% }) %>
   </div>
   <a href="/dashboard"><button>Back</button></a>
 </div>
@@ -91,7 +105,7 @@
     <% if (typeof meeting !== 'undefined' && meeting) { %>
       <p><strong>Title:</strong> <%= meeting.title %></p>
       <p><strong>Date:</strong> <%= meeting.date || 'N/A' %></p>
-      <p><strong>Owner:</strong> <%= meeting.owner || 'Unknown' %></p>
+      <p><strong>Owner:</strong> <%= meeting.owner_gmail || 'Unknown' %></p>
       <p><strong>Invitees:</strong></p>
       
       <% if (Array.isArray(meeting.invites) && meeting.invites.length > 0) { %>
@@ -194,10 +208,10 @@
   </div>
 
   <!-- Invite Users section (only visible to meeting owner) -->
-  <% if (meeting && currentUser === meeting.owner) { %>
+  <% if (meeting && currentUser === meeting.owner_gmail) { %>
     <div id="inviteSection">
       <h3>Invite Users</h3>
-      <form action="/meetings/<%= meeting.id %>/invite" method="POST">
+      <form action="/meetings/<%= meeting.meeting_id %>/invite" method="POST">
         <input type="text" id="inviteesInput" name="invitees" placeholder="Invite usernames (comma-separated)">
         <button type="submit">Add Invitees</button>
       </form>

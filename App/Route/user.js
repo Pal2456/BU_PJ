@@ -8,10 +8,10 @@ router.get('/', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
 
   const [invites] = await db.query(`
-    SELECT m.*, i.status FROM meeting m
-    JOIN invitation i ON m.id = i.meeting_id
-    WHERE i.invitee_gmail = ?
-  `, [req.session.user.gmail]);
+  SELECT * FROM meeting
+  WHERE owner_gmail = ?
+`, [req.session.user.gmail]);
+
 
   res.render('index', {
     pageId: 'meeting-list', // ✅ ใส่ให้ชัดเจน
@@ -47,7 +47,7 @@ router.post('/create', async (req, res) => {
 
   await db.query(
     'INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)',
-    [title, owner_gmail]
+    [title, ownerGmail]
   );
 
   // ✅ กลับไปหน้า create-meeting อีกครั้ง
@@ -57,22 +57,23 @@ router.post('/create', async (req, res) => {
     meetings: [],
     meeting: null,
     userPreferences: [],
-    commonSlots: []
+    commonSlots: [],
   });
 });
 
 
 
 // View Meeting Detail
-router.get('/meetings/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   const meetingId = req.params.id;
 
-  const [[meeting]] = await db.query('SELECT * FROM meeting WHERE id = ?', [meetingId]);
+  const [[meeting]] = await db.query('SELECT * FROM meeting WHERE meeting_id = ?', [meetingId]);
 
   const [invites] = await db.query(`
     SELECT * FROM invitation WHERE meeting_id = ?
   `, [meetingId]);
+  
   meeting.invites = invites;
 
   const [availabilities] = await db.query('SELECT * FROM availability WHERE meeting_id = ?', [meetingId]);
@@ -102,13 +103,13 @@ router.get('/meetings/:id', async (req, res) => {
 });
 
 // Invite Users
-router.post('/meetings/:id/invite', async (req, res) => {
+router.post('meetings/:id/invite', async (req, res) => {
   const meetingId = req.params.id;
   const usernames = req.body.invitees.split(',').map(u => u.trim());
   for (const name of usernames) {
     await db.query('INSERT IGNORE INTO invitation (meeting_id, invitee_gmail, status) VALUES (?, ?, ?)', [meetingId, name, 'pending']);
   }
-  res.redirect(`/meetings/${meetingId}`);
+  res.redirect(`/${meetingId}`);
 });
 
 // Respond to Invite
