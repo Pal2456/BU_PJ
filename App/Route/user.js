@@ -2,12 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../connect1');
 
-router.get('/', (req, res) => {
-  res.redirect('/login');
-});
 
 // View All Meetings for User
-router.get('/meetings', async (req, res) => {
+router.get('/', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
 
   const [invites] = await db.query(`
@@ -33,20 +30,6 @@ router.get('/meetings', async (req, res) => {
 // Create Meeting
 router.get('/create', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
-  console.log("Rendering create-meeting page");
-  res.render('index', {
-  pageId: 'create-meeting',
-  currentUser: ownerGmail,
-  meetings: [],
-  meeting: null,
-  userPreferences: [],
-  commonSlots: []
-});
-});
-
-router.get('/createMeetingPage', (req, res) => {
-  if (!req.session.user) return res.redirect('/login');
-
   res.render('index', {
     pageId: 'create-meeting',
     currentUser: req.session.user.gmail,
@@ -64,7 +47,7 @@ router.post('/create', async (req, res) => {
 
   await db.query(
     'INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)',
-    [title, ownerGmail]
+    [title, owner_gmail]
   );
 
   // ✅ กลับไปหน้า create-meeting อีกครั้ง
