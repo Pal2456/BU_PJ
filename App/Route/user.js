@@ -31,6 +31,7 @@ router.get('/meetings', async (req, res) => {
 
 
 // Create Meeting
+// Create Meeting
 router.get('/meetings/create', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   console.log("Rendering create-meeting page");
