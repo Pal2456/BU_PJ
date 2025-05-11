@@ -1,48 +1,49 @@
-<%- include('header.ejs', { title: 'Meeting Time Arrangement App' }) %>
-
-<%
-  var safeMeetings = (typeof meetings !== 'undefined') ? meetings : [];
-  var safeMeeting = (typeof meeting !== 'undefined') ? meeting : null;
-  var safeCommonSlots = (typeof commonSlots !== 'undefined') ? commonSlots : [];
-  var safeUserPreferences = (typeof userPreferences !== 'undefined') ? userPreferences : [];
-  var safeCurrentUser = (typeof currentUser !== 'undefined') ? currentUser : null;
-  var safePageId = (typeof pageId !== 'undefined') ? pageId : '';
-%>
+<%- include('header.ejs', {title: 'Meeting Time Arrangement App'}) %>
 
 <h1>Meeting Time Arrangement</h1>
 
-<div id="loginPage" class="page <%= safePageId === 'login' ? 'active' : '' %>">
+<!-- Login Page -->
+<div id="loginPage" class="page active">
   <h2>Login</h2>
   <form action="/login" method="POST">
-    <input type="text" name="username" placeholder="Username">
-    <input type="password" name="password" placeholder="Password">
+    <input type="text" id="loginUsername" name="username" placeholder="Username">
+    <input type="password" id="loginPassword" name="password" placeholder="Password">
     <button type="submit">Login</button>
   </form>
-  <p>Don't have an account? <a href="/signup">Sign Up</a></p>
+  <div class="signup-prompt">
+    <p>Don't have an account?</p>
+    <a href="/signup"><button>Sign Up</button></a>
+  </div>
 </div>
 
-<div id="signupPage" class="page <%= safePageId === 'signup' ? 'active' : '' %>">
+<!-- Signup Page -->
+<div id="signupPage" class="page <%= pageId === 'signup' ? 'active' : '' %>">
   <h2>Sign Up</h2>
   <form action="/signup" method="POST">
-    <input type="text" name="username" placeholder="Username">
-    <input type="password" name="password" placeholder="Password">
+    <input type="text" id="signupUsername" name="username" placeholder="Username">
+    <input type="password" id="signupPassword" name="password" placeholder="Password">
     <button type="submit">Sign Up</button>
   </form>
-  <p>Already have an account? <a href="/login">Login</a></p>
+  <div class="login-prompt">
+    <p>Already have an account?</p>
+    <a href="/login"><button>Back</button></a>
+  </div>
 </div>
 
-<div id="dashboardPage" class="page <%= safePageId === 'dashboard' ? 'active' : '' %>">
+<!-- Dashboard Page -->
+<div id="dashboardPage" class="page <%= pageId === 'dashboard' ? 'active' : '' %>">
   <h2>Dashboard</h2>
-  
-  <a href="/meeting/create"><button>Create Meeting</button></a>
-  <a href="/meeting"><button>View Meetings</button></a>
-  <form action="/logout" method="POST"><button type="submit">Logout</button></form>
+  <a href="/meetings/create"><button>Create Meeting</button></a>
+  <a href="/meetings"><button>View Meetings</button></a>
+  <form action="/logout" method="POST">
+    <button type="submit">Logout</button>
+  </form>
 </div>
 
 <!-- Create Meeting Page -->
 <div id="createMeetingPage" class="page <%= pageId === 'create-meeting' ? 'active' : '' %>">
   <h2>Create Meeting</h2>
-  <form action="/meeting/create" method="POST">
+  <form action="/meetings/create" method="POST">
     <input type="text" id="meetingTitle" name="title" placeholder="Meeting Title">
     <button type="submit">Create</button>
   </form>
@@ -53,17 +54,14 @@
 <div id="meetingListPage" class="page <%= pageId === 'meeting-list' ? 'active' : '' %>">
   <h2>Meetings</h2>
   <div id="meetingList">
-    <% if (meeting && meeting.length > 0) { %>
-      <% meeting.forEach(meeting => { %>
+    <% if (meetings && meetings.length > 0) { %>
+      <% meetings.forEach(meeting => { %>
         <div class="invite-item">
           <span><%= meeting.title %> (<%= meeting.date %>)</span>
           <div>
-            <a href="/meeting/<%= meeting.id %>"><button>Open</button></a>
+            <a href="/meetings/<%= meeting.id %>"><button>Open</button></a>
             <% if (meeting.owner === currentUser) { %>
-              <form action="/meeting/<%= meeting.id %>/delete" method="POST" style="display:inline">
-            <a href="/meeting/<%= meeting_id %>"><button>Open</button></a>
-            <% if (meeting.owner === currentUser) { %>
-              <form action="/meeting/<%= meeting_id%>/delete" method="POST" style="display:inline">
+              <form action="/meetings/<%= meeting.id %>/delete" method="POST" style="display:inline">
                 <button type="submit">Delete</button>
               </form>
             <% } %>
@@ -110,5 +108,109 @@
       <% } %>
     <% } %>
   </div>
+  
+  <h3>Available Time Slots</h3>
+  <!-- Legend for time slots -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color legend-selected"></div>
+      <span>Your Selection</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color legend-common"></div>
+      <span>Common Available Times</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color legend-past"></div>
+      <span>Past Times (Not Available)</span>
+    </div>
+  </div>
+  
+  <div id="timeSlots">
+    <% if (meeting) { %>
+      <form action="/meetings/<%= meeting.id %>/availability" method="POST">
+        <div class="time-slots-container">
+          <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; %>
+          <% allSlots.forEach(time => { 
+              const isPast = isPastTime(time);
+              const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
+              const isCommon = commonSlots && commonSlots.includes(time);
+          %>
+            <div class="slot <%= isPast ? 'past' : '' %> <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>">
+              <%= time %>
+              <% if (!isPast) { %>
+                <input type="checkbox" name="selectedSlots" value="<%= time %>" 
+                       <%= isSelected ? 'checked' : '' %> style="display:none;">
+              <% } %>
+            </div>
+          <% }); %>
+        </div>
+        <button type="submit">Save Availability</button>
+      </form>
+    <% } %>
+  </div>
+
+  <!-- Section for intersection time slots -->
+  <div class="intersection-container">
+    <h3 class="intersection-title">Common Available Times</h3>
+    <div id="intersectionSlots" class="intersection-slots">
+      <% if (meeting) { %>
+        <% if (commonSlots && commonSlots.length > 0) { %>
+          <% commonSlots.forEach(time => { %>
+            <div class="intersection-slot"><%= time %></div>
+          <% }); %>
+        <% } else if (userPreferences && userPreferences.length === 1) { %>
+          <p class="no-intersection">Only one participant has set preferences. Showing their available times.</p>
+          <% userPreferences[0].forEach(time => { 
+               if (!isPastTime(time)) { %>
+                <div class="intersection-slot"><%= time %></div>
+              <% } %>
+          <% }); %>
+        <% } else if (userPreferences && userPreferences.length > 0) { %>
+          <p class="no-intersection">No common time slots available yet</p>
+        <% } else { %>
+          <p class="no-intersection">No preferences set by any participants yet</p>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Invite Users section (only visible to meeting owner) -->
+  <% if (meeting && currentUser === meeting.owner) { %>
+    <div id="inviteSection">
+      <h3>Invite Users</h3>
+      <form action="/meetings/<%= meeting.id %>/invite" method="POST">
+        <input type="text" id="inviteesInput" name="invitees" placeholder="Invite usernames (comma-separated)">
+        <button type="submit">Add Invitees</button>
+      </form>
+    </div>
+  <% } %>
+
+  <a href="/meetings"><button>Back</button></a>
+</div>
 
 <%- include('footer.ejs') %>
+
+<!-- This would be in your main.js or a separate javascript file -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get all slot elements
+    const slots = document.querySelectorAll('.slot');
+    
+    // Add click event listener to each slot
+    slots.forEach(slot => {
+      if (!slot.classList.contains('past')) {
+        slot.addEventListener('click', function() {
+          // Toggle selected class for visual feedback
+          this.classList.toggle('selected');
+          
+          // Toggle checkbox state
+          const checkbox = this.querySelector('input[type="checkbox"]');
+          if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+          }
+        });
+      }
+    });
+  });
+</script>
