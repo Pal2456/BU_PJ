@@ -32,7 +32,7 @@ router.get('/meetings', async (req, res) => {
 
 // Create Meeting
 // Create Meeting
-router.get('/meetings/create', (req, res) => {
+router.get('/create', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   console.log("Rendering create-meeting page");
   res.render('index', {
@@ -59,7 +59,7 @@ router.get('/createMeetingPage', (req, res) => {
 });
 
 // Route/user.js
-router.post('/meetings/create', async (req, res) => {
+router.post('/create', async (req, res) => {
   const { title } = req.body;
   const ownerGmail = req.session.user.gmail;
 
