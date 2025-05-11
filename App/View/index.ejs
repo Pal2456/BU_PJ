@@ -69,7 +69,7 @@
 
   <div class="invite-item">
     <span><%= meeting.title %></span>
-    <div>
+    <div class="button_component">
       <% if (meeting.owner_gmail === currentUser) { %>
         <!-- 🧑‍💼 Owner sees Open + Delete -->
         <a href="/meetings/<%= meeting.meeting_id %>"><button>Open</button></a>
@@ -112,8 +112,8 @@
         <ul>
           <% meeting.invites.forEach(invite => { %>
             <li>
-              <%= invite.username %> (<%= invite.status %>)
-              <% if (invite.username === currentUser && invite.status === 'pending') { %>
+              <%= invite.invitee_gmail %> (<%= invite.status %>)
+              <% if (invite.invitee_gmail === currentUser && invite.status === 'pending') { %>
                 <form action="/meetings/<%= meeting.id %>/respond" method="POST" style="display:inline">
                   <input type="hidden" name="status" value="accepted">
                   <button type="submit">Accept</button>
@@ -156,7 +156,7 @@
 
 <div id="timeSlots">
   <% if (typeof meeting !== 'undefined' && meeting) { %>
-    <form action="/meetings/<%= meeting.id %>/availability" method="POST">
+    <form action="/meetings/<%= meeting.meeting_id %>/availability" method="POST">
       <div class="time-slots-container">
         <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]; %>
         <% allSlots.forEach(time => {

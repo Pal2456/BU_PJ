@@ -7,16 +7,32 @@ const db = require('../connect1');
 router.get('/', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
 
-  const [invites] = await db.query(`
-  SELECT * FROM meeting
-  WHERE owner_gmail = ?
-`, [req.session.user.gmail]);
+  const [meetings] = await db.query(`
+  SELECT m.*, (
+    SELECT i.status
+    FROM invitation i
+    WHERE i.meeting_id = m.meeting_id
+      AND i.invitee_gmail = ?
+    LIMIT 1
+  ) AS status
+  FROM meeting m
+  WHERE m.owner_gmail = ?
+     OR EXISTS (
+       SELECT 1 FROM invitation i
+       WHERE i.meeting_id = m.meeting_id
+         AND i.invitee_gmail = ?
+     )
+`, [req.session.user.gmail, req.session.user.gmail, req.session.user.gmail]);
+
+
+
+
 
 
   res.render('index', {
     pageId: 'meeting-list', // ✅ ใส่ให้ชัดเจน
     currentUser: req.session.user.gmail,
-    meetings: invites,
+    meetings: meetings,
     meeting: null,
     userPreferences: [],
     commonSlots: []
@@ -103,17 +119,29 @@ router.get('/:id', async (req, res) => {
 });
 
 // Invite Users
-router.post('meetings/:id/invite', async (req, res) => {
+router.post('/:id/invite', async (req, res) => {
   const meetingId = req.params.id;
   const usernames = req.body.invitees.split(',').map(u => u.trim());
-  for (const name of usernames) {
-    await db.query('INSERT IGNORE INTO invitation (meeting_id, invitee_gmail, status) VALUES (?, ?, ?)', [meetingId, name, 'pending']);
+
+  for (const gmail of usernames) {
+    const [[user]] = await db.query('SELECT id FROM user WHERE gmail = ?', [gmail]);
+
+    if (user) {
+      await db.query(
+        'INSERT IGNORE INTO invitation (meeting_id, invitee_gmail, status, user_id) VALUES (?, ?, ?, ?)',
+        [meetingId, gmail, 'pending', user.id]
+      );
+    } else {
+      console.warn(`⚠️ Gmail not found in user table: ${gmail}`);
+    }
   }
-  res.redirect(`/${meetingId}`);
+
+  res.redirect(`/meetings/${meetingId}`);
 });
 
+
 // Respond to Invite
-router.post('/meetings/:id/respond', async (req, res) => {
+router.post('/:id/respond', async (req, res) => {
   const meetingId = req.params.id;
   const userGmail = req.session.user.gmail;
   const status = req.body.status;
@@ -122,13 +150,67 @@ router.post('/meetings/:id/respond', async (req, res) => {
 });
 
 // Save Availability
-router.post('/meetings/:id/availability', async (req, res) => {
+router.get('/:id/availability', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  const meetingId = req.params.id;
+
+  // 1. Get meeting info
+  const [[meeting]] = await db.query('SELECT * FROM meeting WHERE meeting_id = ?', [meetingId]);
+
+  // 2. Get invites
+  const [invites] = await db.query(`
+    SELECT * FROM invitation WHERE meeting_id = ?
+  `, [meetingId]);
+  meeting.invites = invites;
+
+  // 3. Get availability records
+  const [availabilities] = await db.query('SELECT * FROM availability WHERE meeting_id = ?', [meetingId]);
+
+  // 4. Group availability by user
+  const slots = {};
+  for (const row of availabilities) {
+    const user = row.user_gmail;
+    if (!slots[user]) slots[user] = [];
+    slots[user].push(row.time_slot);
+  }
+
+  // 5. Filter for accepted users
+  const acceptedUsers = invites
+    .filter(invite => invite.status === 'accepted')
+    .map(invite => invite.invitee_gmail);
+
+  // 6. Collect their time selections
+  const userPreferences = acceptedUsers.map(user => slots[user] || []);
+
+  // 7. Calculate common slots (only if all accepted users submitted)
+  const allSubmitted = userPreferences.length > 0 && userPreferences.every(p => p.length > 0);
+
+  const commonSlots = allSubmitted
+    ? userPreferences.reduce((a, b) => a.filter(time => b.includes(time)))
+    : [];
+
+  // 8. Send to frontend
+  meeting.slots = slots;
+
+  res.render('index', {
+    pageId: 'meeting-detail',
+    meeting,
+    currentUser: req.session.user.gmail,
+    userPreferences,
+    commonSlots
+  });
+});
+
+// Post the data for availability
+router.post('/:id/availability', async (req, res) => {
   const meetingId = req.params.id;
   const userGmail = req.session.user.gmail;
   const slots = req.body.selectedSlots || [];
 
+  // Delete old availability
   await db.query('DELETE FROM availability WHERE meeting_id = ? AND user_gmail = ?', [meetingId, userGmail]);
 
+  // Insert new slots
   const insertValues = Array.isArray(slots) ? slots : [slots];
   for (const time of insertValues) {
     await db.query('INSERT INTO availability (meeting_id, user_gmail, time_slot) VALUES (?, ?, ?)', [meetingId, userGmail, time]);
@@ -137,10 +219,18 @@ router.post('/meetings/:id/availability', async (req, res) => {
   res.redirect(`/meetings/${meetingId}`);
 });
 
+
 // Delete Meeting
-router.post('/meetings/:id/delete', async (req, res) => {
+router.post('/:id/delete', async (req, res) => {
   const meetingId = req.params.id;
-  await db.query('DELETE FROM meeting WHERE id = ?', [meetingId]);
+
+  // Delete child rows first
+  await db.query('DELETE FROM availability WHERE meeting_id = ?', [meetingId]);
+  await db.query('DELETE FROM invitation WHERE meeting_id = ?', [meetingId]);
+
+  // Then delete parent
+  await db.query('DELETE FROM meeting WHERE meeting_id = ?', [meetingId]);
+
   res.redirect('/meetings');
 });
 
