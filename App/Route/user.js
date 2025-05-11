@@ -47,7 +47,7 @@ router.post('/create', async (req, res) => {
 
   await db.query(
     'INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)',
-    [title, owner_gmail]
+    [title, ownerGmail]
   );
 
   // ✅ กลับไปหน้า create-meeting อีกครั้ง
