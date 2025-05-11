@@ -34,15 +34,15 @@
 <div id="dashboardPage" class="page <%= safePageId === 'dashboard' ? 'active' : '' %>">
   <h2>Dashboard</h2>
   
-  <a href="/meetings/create"><button>Create Meeting</button></a>
-  <a href="/meetings"><button>View Meetings</button></a>
+  <a href="/meeting/create"><button>Create Meeting</button></a>
+  <a href="/meeting"><button>View Meetings</button></a>
   <form action="/logout" method="POST"><button type="submit">Logout</button></form>
 </div>
 
 <!-- Create Meeting Page -->
 <div id="createMeetingPage" class="page <%= pageId === 'create-meeting' ? 'active' : '' %>">
   <h2>Create Meeting</h2>
-  <form action="/meetings/create" method="POST">
+  <form action="/meeting/create" method="POST">
     <input type="text" id="meetingTitle" name="title" placeholder="Meeting Title">
     <button type="submit">Create</button>
   </form>
@@ -53,14 +53,14 @@
 <div id="meetingListPage" class="page <%= pageId === 'meeting-list' ? 'active' : '' %>">
   <h2>Meetings</h2>
   <div id="meetingList">
-    <% if (meetings && meetings.length > 0) { %>
-      <% meetings.forEach(meeting => { %>
+    <% if (meeting && meeting.length > 0) { %>
+      <% meeting.forEach(meeting => { %>
         <div class="invite-item">
           <span><%= meeting.title %> (<%= meeting.date %>)</span>
           <div>
-            <a href="/meetings/<%= meeting.id %>"><button>Open</button></a>
+            <a href="/meeting/<%= meeting.id %>"><button>Open</button></a>
             <% if (meeting.owner === currentUser) { %>
-              <form action="/meetings/<%= meeting.id %>/delete" method="POST" style="display:inline">
+              <form action="/meeting/<%= meeting.id %>/delete" method="POST" style="display:inline">
                 <button type="submit">Delete</button>
               </form>
             <% } %>
@@ -75,7 +75,7 @@
 </div>
 
 <!-- Meeting Detail Page -->
-<div id="meetingDetailPage" class="page <%= safePageId === 'meeting-detail' ? 'active' : '' %>">
+<div id="meetingDetailPage" class="page <%= pageId === 'meeting-detail' ? 'active' : '' %>">
   <h2>Meeting Details</h2>
   <div id="meetingInfo">
     <% if (meeting) { %>
