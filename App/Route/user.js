@@ -44,16 +44,37 @@ router.get('/', async (req, res) => {
 
 
 // Create Meeting
-router.get('/create', (req, res) => {
+router.get('/create', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
-  res.render('index', {
-    pageId: 'create-meeting',
-    currentUser: req.session.user.gmail,
-    meetings: [],
-    meeting: null,
-    userPreferences: [],
-    commonSlots: []
-  });
+  
+  try {
+    // Fetch recent meetings for the current user
+    const [meetings] = await db.query(`
+      SELECT * FROM meeting 
+      WHERE owner_gmail = ?
+      ORDER BY created_at DESC
+      LIMIT 5
+    `, [req.session.user.gmail]);
+
+    res.render('index', {
+      pageId: 'create-meeting',
+      currentUser: req.session.user.gmail,
+      meetings: meetings || [], // Ensure we always pass an array
+      meeting: null,
+      userPreferences: [],
+      commonSlots: []
+    });
+  } catch (err) {
+    console.error('Error fetching meetings:', err);
+    res.render('index', {
+      pageId: 'create-meeting',
+      currentUser: req.session.user.gmail,
+      meetings: [],
+      meeting: null,
+      userPreferences: [],
+      commonSlots: []
+    });
+  }
 });
 
 // Route/user.js
@@ -61,20 +82,19 @@ router.post('/create', async (req, res) => {
   const { title } = req.body;
   const ownerGmail = req.session.user.gmail;
 
-  await db.query(
-    'INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)',
-    [title, ownerGmail]
-  );
-
-  // ✅ กลับไปหน้า create-meeting อีกครั้ง
-  res.render('index', {
-    pageId: 'create-meeting',
-    currentUser: ownerGmail,
-    meetings: [],
-    meeting: null,
-    userPreferences: [],
-    commonSlots: [],
-  });
+  try {
+    // Insert new meeting
+    await db.query(
+      'INSERT INTO meeting (title, owner_gmail) VALUES (?, ?)',
+      [title, ownerGmail]
+    );
+    
+    // Redirect to the create page which will fetch fresh data
+    res.redirect('/meetings/create');
+  } catch (err) {
+    console.error('Error creating meeting:', err);
+    res.redirect('/meetings/create');
+  }
 });
 
 

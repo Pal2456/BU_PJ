@@ -7,104 +7,225 @@
   var commonSlots = typeof commonSlots !== 'undefined' ? commonSlots : [];
 %>
 
+<div class="logo-container">
+  <img src="/logo.png" alt="App Logo" class="logo">
+</div>
+<!-- <h1>Meeting Time Arrangement</h1> -->
 
-<h1>Meeting Time Arrangement</h1>
 
 <!-- Login Page -->
 <div id="loginPage" class="page <%= pageId === 'login' ? 'active' : '' %>">
-  <h2>Login</h2>
-  <form action="/login" method="POST">
-    <input type="text" id="loginUsername" name="username" placeholder="Username">
-    <input type="password" id="loginPassword" name="password" placeholder="Password">
-    <button type="submit">Login</button>
-  </form>
-  <div class="signup-prompt">
-    <p>Don't have an account?</p>
-    <a href="/signup"><button>Sign Up</button></a>
+  <div class="welcome-container">
+    <img src="/welcome-icon.png" alt="Welcome Icon" class="welcome-icon">
+    <div class="login-content">
+      <h2>Login</h2>
+      <form action="/login" method="POST">
+        <input type="text" id="loginUsername" name="username" placeholder="Username">
+        <input type="password" id="loginPassword" name="password" placeholder="Password">
+        <button type="submit">Login</button>
+      </form>
+      <div class="signup-prompt">
+        <p>Don't have an account?</p>
+        <a href="/signup"><button>Sign Up</button></a>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Signup Page -->
 <div id="signupPage" class="page <%= pageId === 'signup' ? 'active' : '' %>">
-  <h2>Sign Up</h2>
-  <form action="/signup" method="POST">
-    <input type="text" id="signupUsername" name="username" placeholder="Username">
-    <input type="password" id="signupPassword" name="password" placeholder="Password">
-    <button type="submit">Sign Up</button>
-  </form>
-  <div class="login-prompt">
-    <p>Already have an account?</p>
-    <a href="/login"><button>Back</button></a>
+  <div class="welcome-container">
+    <img src="/welcome-icon.png" alt="Welcome Icon" class="welcome-icon">
+    <div class="signup-content">
+      <h2>Sign Up</h2>
+      <form action="/signup" method="POST">
+        <input type="text" id="signupUsername" name="username" placeholder="Username">
+        <input type="password" id="signupPassword" name="password" placeholder="Password">
+        <button type="submit">Sign Up</button>
+      </form>
+      <div class="login-prompt">
+        <p>Already have an account?</p>
+        <a href="/login"><button>Login</button></a>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Dashboard Page -->
+ <!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <div id="dashboardPage" class="page <%= pageId === 'dashboard' ? 'active' : '' %>">
-  <h2>Dashboard</h2>
-  <a href="/meetings/create"><button>Create Meeting</button></a>
-  <a href="/meetings"><button>View Meetings</button></a>
-  <form action="/logout" method="POST">
-    <button type="submit">Logout</button>
-  </form>
+  <div class="dashboard-header">
+    <div class="dashboard-hero">
+      <h1 class="dashboard-title">
+        <i class="fas fa-calendar-alt"></i> Meeting Arrangement Hub
+      </h1>
+      <p class="dashboard-tagline">
+        Your central command for scheduling harmony • Find perfect times • Coordinate effortlessly
+      </p>
+    </div>
+    <div class="logout-btn">
+      <form action="/logout" method="POST">
+        <button type="submit">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Actions Section -->
+  <div class="actions-container">
+    <div class="action-card">
+      <div class="action-icon">
+        <i class="fas fa-plus-circle"></i>
+      </div>
+      <h3>Create Meeting</h3>
+      <a href="/meetings/create"><button>Create</button></a>
+    </div>
+
+    <div class="action-card">
+      <div class="action-icon">
+        <i class="fas fa-list"></i>
+      </div>
+      <h3>View Meetings</h3>
+      <a href="/meetings"><button>View All</button></a>
+    </div>
+  </div>
 </div>
 
 <!-- Create Meeting Page -->
 <div id="createMeetingPage" class="page <%= pageId === 'create-meeting' ? 'active' : '' %>">
-  <h2>Create Meeting</h2>
-  <form action="/meetings/create" method="POST">
-    <input type="text" id="meetingTitle" name="title" placeholder="Meeting Title">
-    <button type="submit">Create</button>
-  </form>
-  <a href="/dashboard"><button>Back</button></a>
+  <div class="meeting-creation-container">
+    <h2>Create New Meeting</h2>
+    
+    <!-- Creation Form -->
+    <form action="/meetings/create" method="POST" class="meeting-form">
+      <div class="form-group">
+        <h4>Meeting Title</h4>
+        <input type="text" id="meetingTitle" name="title" placeholder="Enter meeting title" required>
+      </div>
+      <button type="submit" class="button">
+        Create 
+      </button>
+    </form>
+    
+    <!-- Recently Created Meetings Section -->
+    <div class="recent-meetings">
+      <h3>
+        <i class="fas fa-history"></i> Your Recent Meetings
+        <span class="badge"><%= meetings ? meetings.length : 0 %></span>
+      </h3>
+      
+      <% if (meetings && meetings.length > 0) { %>
+        <div class="meeting-cards">
+          <% meetings.forEach(meeting => { %>
+            <div class="meeting-card">
+              <div class="card-header">
+                <h4><%= meeting.title %></h4>
+                <span class="meeting-id">ID: <%= meeting.meeting_id %></span>
+              </div>
+              <div class="card-body">
+                <% if (meeting.created_at) { %>
+                  <p class="meeting-date">
+                    <i class="far fa-calendar-alt"></i> 
+                    <%= new Date(meeting.created_at).toLocaleString() %>
+                  </p>
+                <% } %>
+                <a href="/meetings/<%= meeting.meeting_id %>" class="btn-outline">
+                  <i class="fas fa-door-open"></i> Open Meeting
+                </a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <i class="far fa-calendar-times"></i>
+          <p>No meetings created yet. Start by creating one above!</p>
+        </div>
+      <% } %>
+    </div>
+    
+    <a href="/dashboard" class="btn-back">
+      <i class="fas fa-arrow-left"></i> Back 
+    </a>
+  </div>
 </div>
 
 <!-- Meeting List Page -->
 <div id="meetingListPage" class="page <%= pageId === 'meeting-list' ? 'active' : '' %>">
-  <h2>Meetings</h2>
-  <div id="meetingList">
-    <% meetings.forEach(meeting => {
-     if (!meeting) return;
-%>
-  <% if (meeting.status === 'declined') return; %> <!-- Hide declined -->
-
-  <div class="invite-item">
-    <span><%= meeting.title %></span>
-    <div class="button_component">
-      <% if (meeting.owner_gmail === currentUser) { %>
-        <!-- 🧑‍💼 Owner sees Open + Delete -->
-        <a href="/meetings/<%= meeting.meeting_id %>"><button>Open</button></a>
-        <form action="/meetings/<%= meeting.meeting_id %>/delete" method="POST" style="display:inline">
-          <button type="submit">Delete</button>
-        </form>
-      <% } else if (meeting.status === 'pending') { %>
-        <!-- 🤝 Invited user sees Accept/Decline -->
-        <form action="/meetings/<%= meeting.meeting_id %>/respond" method="POST" style="display:inline">
-          <input type="hidden" name="status" value="accepted">
-          <button type="submit">Accept</button>
-        </form>
-        <form action="/meetings/<%= meeting.meeting_id %>/respond" method="POST" style="display:inline">
-          <input type="hidden" name="status" value="declined">
-          <button type="submit">Decline</button>
-        </form>
-      <% } else if (meeting.status === 'accepted') { %>
-        <!-- ✅ Accepted user sees Open only -->
-        <a href="/meetings/<%= meeting.meeting_id %>"><button>Open</button></a>
-      <% } %>
+    <h2>Meetings</h2>
+    <% if (meetings && meetings.length > 0) { %>
+        <div class="meeting-cards">
+            <% meetings.forEach(meeting => {
+                if (!meeting) return;
+                if (meeting.status === 'declined') return;
+            %>
+                <div class="meeting-card">
+                    <div class="card-header">
+                        <h4><%= meeting.title %></h4>
+                        <span class="meeting-id">ID: <%= meeting.meeting_id %></span>
+                    </div>
+                    <div class="card-body">
+                        <% if (meeting.created_at) { %>
+                            <p class="meeting-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <%= new Date(meeting.created_at).toLocaleString() %>
+                            </p>
+                        <% } %>
+                        <div style="display: flex; gap: 10px;">  <% if (meeting.owner_gmail === currentUser) { %>
+                                <a href="/meetings/<%= meeting.meeting_id %>" class="btn-outline">
+                                    <i class="fas fa-door-open"></i> Open Meeting
+                                </a>
+                                <div class="actions-top-right">
+                                  <form action="/meetings/<%= meeting.meeting_id %>/delete" method="POST" style="display:inline">
+                                    <button type="submit" title="Delete" class="icon-button delete-button">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                  </form>
+                                </div>
+                            <% } else if (meeting.status === 'pending') { %>
+                                <form action="/meetings/<%= meeting.meeting_id %>/respond" method="POST" style="display:inline">
+                                    <input type="hidden" name="status" value="accepted">
+                                    <button type="submit" class="accept-button">
+                                        <i class="fas fa-check"></i> Accept
+                                    </button>
+                                </form>
+                                <form action="/meetings/<%= meeting.meeting_id %>/respond" method="POST" style="display:inline">
+                                    <input type="hidden" name="status" value="declined">
+                                    <button type="submit" class="decline-button">
+                                        <i class="fas fa-times"></i> Decline
+                                    </button>
+                                </form>
+                            <% } else if (meeting.status === 'accepted') { %>
+                                <a href="/meetings/<%= meeting.meeting_id %>" class="btn-outline">
+                                    <i class="fas fa-door-open"></i> Open Meeting
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
         </div>
-      </div>
-    <% }) %>
-  </div>
-  <a href="/dashboard"><button>Back</button></a>
+    <% } else { %>
+        <div class="empty-state">
+            <i class="far fa-calendar-times"></i>
+            <p>No meetings found.</p>
+        </div>
+    <% } %>
+    <a href="/dashboard" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
 </div>
 
-<<!-- Meeting Detail Page -->
+<!-- Meeting Detail Page -->
 <div id="meetingDetailPage" class="page <%= pageId === 'meeting-detail' ? 'active' : '' %>">
 
   <h2>Meeting Details</h2>
   <div id="meetingInfo">
     <% if (typeof meeting !== 'undefined' && meeting) { %>
       <p><strong>Title:</strong> <%= meeting.title %></p>
-      <p><strong>Date:</strong> <%= meeting.date || 'N/A' %></p>
+      <p><strong>Meeting ID:</strong> <%= meeting.meeting_id %></p>
       <p><strong>Owner:</strong> <%= meeting.owner_gmail || 'Unknown' %></p>
       <p><strong>Invitees:</strong></p>
       
@@ -133,9 +254,37 @@
       <p><em>No meeting selected.</em></p>
     <% } %>
   </div>
-  <h2>Available Time Slots</h2>
-<!-- Legend for time slots -->
 
+  <!-- Invite Users section (only visible to meeting owner) -->
+  <% if (meeting && currentUser === meeting.owner_gmail) { %>
+    <div class="invite-container" id="inviteSection">
+      <h3 class="invite-title">
+        <i class="fas fa-user-plus"></i> Invite Participants
+      </h3>
+      <p class="invite-subtitle">Add colleagues by entering their usernames below</p>
+      <div class="invite-form-container">
+        <form action="/meetings/<%= meeting.meeting_id %>/invite" method="POST" class="invite-form">
+          <div class="input-with-button">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="inviteesInput" 
+                name="invitees" 
+                placeholder="Enter usernames (comma separated)"
+                class="invite-input"
+              >
+            </div>
+            <button type="submit" class="invite-button">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+<!-- Legend for time slots -->
+<h2>Available Time Slots</h2>
 <div class="legend">
   <div class="legend-item">
     <div class="legend-color legend-selected"></div>
@@ -155,13 +304,18 @@
   <% if (typeof meeting !== 'undefined' && meeting) { %>
     <form action="/meetings/<%= meeting.meeting_id %>/availability" method="POST">
       <div class="time-slots-container">
-        <% const allSlots = ["09:00", "10:00", "11:00", "12:00", "13:00", "23:20", "23:10", "23:00"]; %>
+        <% const allSlots = []; 
+          for (let hour = 0; hour < 24; hour++) {
+            const time = `${hour.toString().padStart(2, '0')}:00`;
+            allSlots.push(time);
+          } 
+        %>
         <% allSlots.forEach(time => {
            
             const isSelected = meeting.slots && meeting.slots[currentUser] && meeting.slots[currentUser].includes(time);
             const isCommon = commonSlots && commonSlots.includes(time);
         %>
-          <div class="slot <%= isSelected ? 'selected' : '' %> <%= isCommon ? 'common' : '' %>" data-time="<%= time %>">
+          <div class="slot <%= isSelected ? 'selected' : '' %> <%= (isCommon && !isSelected) ? 'common' : '' %>" data-time="<%= time %>">
             <%= time %>
             
             <input type="checkbox" name="selectedSlots" value="<%= time %>" 
@@ -203,18 +357,37 @@
 </div>
 
 
-  <!-- Invite Users section (only visible to meeting owner) -->
+  <!-- Invite Users section (only visible to meeting owner)
   <% if (meeting && currentUser === meeting.owner_gmail) { %>
-    <div id="inviteSection">
-      <h3>Invite Users</h3>
-      <form action="/meetings/<%= meeting.meeting_id %>/invite" method="POST">
-        <input type="text" id="inviteesInput" name="invitees" placeholder="Invite usernames (comma-separated)">
-        <button type="submit">Add Invitees</button>
-      </form>
+    <div class="invite-container" id="inviteSection">
+      <h3 class="invite-title">
+        <i class="fas fa-user-plus"></i> Invite Participants
+      </h3>
+      <div class="invite-form-container">
+        <form action="/meetings/<%= meeting.meeting_id %>/invite" method="POST" class="invite-form">
+          <div class="input-group">
+            <span class="input-icon">
+              <i class="fas fa-users"></i>
+            </span>
+            <input 
+              type="text" 
+              id="inviteesInput" 
+              name="invitees" 
+              placeholder="Enter usernames (comma separated)"
+              class="invite-input"
+            >
+          </div>
+          <button type="submit" class="invite-button">
+            <i class="fas fa-paper-plane"></i> Send Invites
+          </button>
+        </form>
+      </div>
     </div>
-  <% } %>
+  <% } %> -->
 
-  <a href="/meetings"><button>Back</button></a>
+  <a href="/meetings" class="btn-back">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
 </div>
 </div>
 

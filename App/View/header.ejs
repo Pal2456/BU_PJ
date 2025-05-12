@@ -1,166 +1,786 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %></title>
-  <style>
-    body {
-        font-family: 'Helvetica Neue', sans-serif;
-        background: #f9fafb;
-        color: #333;
-        padding: 20px;
-    }
-    h1, h2, h3 {
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .button_component[name="status"] {
-        color: #16a34a;
-    }
-    .page {
-        display: none;
-        max-width: 600px;
-        margin: 20px auto;
-        background: #fff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
-    .active {
-        display: block;
-    }
-    input, button {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-    }
-    button {
-        background: #4f46e5;
-        color: white;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    button:hover {
-        background: #4338ca;
-    }
-    .calendar {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
-        margin-top: 20px;
-    }
-    .slot {
-        padding: 10px;
-        background: #f1f5f9;
-        border-radius: 6px;
-        text-align: center;
-        cursor: pointer;
-        font-size: 0.9rem;
-        margin: 5px;
-    }
-    .slot.selected {
-        background: #c7d2fe;
-    }
-    .slot.past {
-        background: #e2e8f0;
-        color: #aaa;
-        pointer-events: none;
-    }
-    .slot.common {
-        background: #4ade80; /* Brighter green for better visibility */
-        color: #333;
-        font-weight: bold;
-        border: 2px solid #16a34a; /* Add border for emphasis */
-    }
-    .intersection-container {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f0fff4; /* Light green background */
-        border-radius: 8px;
-        border: 1px solid #dcfce7;
-    }
-    .intersection-title {
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: #16a34a; /* Matching green color */
-        font-size: 1.2rem;
-    }
-    .intersection-slots {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .intersection-slot {
-        padding: 8px 12px;
-        background: #4ade80; /* Matching green */
-        border-radius: 6px;
-        font-weight: bold;
-        border: 2px solid #16a34a;
-    }
-    .no-intersection {
-        color: #666;
-        font-style: italic;
-    }
-    .invite-list {
-        margin-top: 20px;
-    }
-    .invite-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #f3f4f6;
-        padding: 8px;
-        margin-bottom: 5px;
-        border-radius: 6px;
-    }
-    .signup-prompt, .login-prompt {
-        text-align: center;
-        margin-top: 10px;
-    }
-    .legend {
-        display: flex;
-        justify-content: center;
-        margin: 15px 0;
-        gap: 15px;
-    }
-    .legend-item {
-        display: flex;
-        align-items: center;
-        font-size: 0.9rem;
-    }
-    .legend-color {
-        width: 16px;
-        height: 16px;
-        margin-right: 5px;
-        border-radius: 3px;
-    }
-    .legend-selected {
-        background: #c7d2fe;
-    }
-    .legend-common {
-        background: #4ade80;
-        border: 1px solid #16a34a;
-    }
-    .legend-past {
-        background: #e2e8f0;
-        color: #aaa;
-    }
-    .time-slots-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .error-message {
-        color: #dc2626;
-        font-size: 0.9rem;
-        margin-top: 5px;
-        text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/logo.png" type="image/x-icon">
+    <title><%= title %></title>
+    <style>
+        :root {
+            --primary-color: #372e88;
+            --secondary-color: #1d1a36;
+            --background-color: #f9fafb;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('/coverbg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        h1, h2, h3 {
+            text-align: center;
+            margin: 0;
+            padding-bottom: 10px;
+        }
+        .logo-container {
+            text-align: center;
+        }
+        .logo {
+            width: 100px;
+            height: auto;
+        }
+
+        /* Welcome Container */
+        .welcome-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Welcome Icon - Left Side */
+        .welcome-icon {
+            width: 300px; 
+            height: auto;
+            margin-right: 5px; 
+            transition: transform 0.3s ease;
+        }
+
+        /* Content Boxes */
+        .login-content,
+        .signup-content {
+            background: rgba(255, 255, 255, 0.39);
+            padding: 30px;
+            border-radius: 12px;
+            width: 350px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Form Elements */
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0);
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+        /* Prompt Container Styles */
+        .signup-prompt,
+        .login-prompt {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Space between text and button */
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Text Button Styles */
+        .signup-prompt button,
+        .login-prompt button {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .signup-prompt button:hover,
+        .login-prompt button:hover {
+            color: var(--secondary-color);
+            text-decoration: none;
+            background: none;
+        }
+
+        .button_component[name="status"] {
+            color: #16a34a;
+        }
+        .page {
+            display: none;
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff6e;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .active {
+            display: block;
+        }
+        button {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        button {
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: var(--secondary-color);
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .slot {
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 5px;
+        }
+        .slot.selected {
+            background: #c7d2fe;
+        }
+        .slot.past {
+            background: #e2e8f0;
+            color: #aaa;
+            pointer-events: none;
+        }
+        .slot.common {
+            background: #4ade80; /* Brighter green for better visibility */
+            color: #333;
+            font-weight: bold;
+            border: 2px solid #16a34a; /* Add border for emphasis */
+        }
+        .intersection-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fff4; /* Light green background */
+            border-radius: 8px;
+            border: 1px solid #dcfce7;
+        }
+        .intersection-title {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #16a34a; /* Matching green color */
+            font-size: 1.2rem;
+        }
+        .intersection-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .intersection-slot {
+            padding: 8px 12px;
+            background: #4ade80; /* Matching green */
+            border-radius: 6px;
+            font-weight: bold;
+            border: 2px solid #16a34a;
+        }
+        .no-intersection {
+            color: #666;
+            font-style: italic;
+        }
+        .invite-list {
+            margin-top: 20px;
+        }
+        .invite-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f3f4f6;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        .legend-selected {
+            background: #c7d2fe;
+        }
+
+        .legend-common {
+            background: #4ade80;
+            border: 1px solid #16a34a;
+        }
+        .legend-past {
+            background: #e2e8f0;
+            color: #aaa;
+        }
+        .time-slots-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: #dc2626;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* Dashboard Styling */
+        /* Dashboard Styles */
+        #dashboardPage {
+            max-width: 1000px;
+            min-height: 0vh;
+            margin: 0 auto;
+            padding: 2rem;
+
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-hero {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.2rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 1rem;
+            border-bottom: #5c5c5c 1px solid;
+        }
+
+        .dashboard-title i {
+            color: var(--secondary-color);
+        }
+
+        .dashboard-tagline {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-tagline::before {
+            content: "•";
+            color: #bdc3c7;
+        }
+
+        /* Modern dot separator alternative */
+        .dashboard-tagline {
+            display: flex;
+            flex-wrap: wrap;
+            column-gap: 1rem;
+            row-gap: 0.5rem;
+        }
+
+        .dashboard-tagline span {
+            position: relative;
+            padding-right: 1rem;
+        }
+
+        .dashboard-tagline span:not(:last-child)::after {
+            content: "•";
+            position: absolute;
+            right: 0;
+            color: #bdc3c7;
+        }
+
+        .actions-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .action-card {
+            color: var(--secondary-color);
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .action-card button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .action-card button:hover {
+            background: #1d1a36;
+        }
+
+        .logout-btn {
+            margin-top: 2rem;
+            text-align: right;
+        }
+
+        .logout-btn button {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .logout-btn button:hover {
+            background: #660e0e;
+        }
+        /* Create Meeting Page Styles */
+        #createMeetingPage {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .meeting-creation-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .meeting-form {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .form-group h4{
+            margin: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+
+        #meetingTitle {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        #meetingTitle:focus {
+            outline: none;
+            border-color: #4a6baf;
+            box-shadow: 0 0 0 3px rgba(74, 107, 175, 0.1);
+        }
+
+        .recent-meetings {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .recent-meetings h3 {
+            color: #2d3748;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .meeting-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .meeting-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .meeting-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-header h4 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .meeting-id {
+            font-size: 0.75rem;
+            color: #718096;
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        .meeting-date {
+            color: #718096;
+            font-size: 0.85rem;
+            margin: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+            background: white;
+            border-radius: 8px;
+            border: 1px dashed #e2e8f0;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #cbd5e0;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-outline {
+            padding: 0.5rem 1rem;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            color: var(--primary-color);
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4a6baf;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: #3a5a9f;
+        }
+
+        #meetingListPage {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .meeting-card {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .meeting-card .actions-top-right {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .meeting-card .actions-top-right button,
+        .meeting-card .actions-top-right a {
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+        }
+
+        /* Specific styling for each button type. */
+        .meeting-card .actions-top-right .open-button {
+            color: var(--primary-color);
+        }
+        .meeting-card .actions-top-right .open-button:hover {
+            color: var(--secondary-color);
+        }
+
+        .meeting-card .actions-top-right .delete-button {
+            color: #dc2626;
+        }
+
+        .meeting-card .actions-top-right .delete-button:hover {
+            color: #b91c1c;
+        }
+
+        .meeting-card .accept-button {
+            background-color: #16a34a;
+            padding: 5px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .meeting-card .accept-button:hover {
+            background-color: #15803d;
+        }
+
+        .meeting-card .decline-button {
+            background-color: #dc2626;
+            padding: 5px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .meeting-card .decline-button:hover {
+            background-color: #b91c1c;
+        }
+
+        .meeting-card .actions-top-right i {
+            margin: 0;
+        }
+
+        .meeting-card .delete-form {
+            display: inline;
+        }
+        .respond-buttons{
+            display: flex;
+            gap: 10px;
+        }
+
+        #meetingDetailPage {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--background-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .time-slots-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 6 columns */
+            grid-template-rows: repeat(4, auto); /* 4 rows */
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .invite-container {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #6c757d36;
+        }
+
+        .invite-header {
+            margin-bottom: 20px;
+        }
+
+        .invite-title {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: #6c757d36 1px solid;
+            width: 50%;
+        }
+
+        .invite-subtitle {
+            color: #6c757d94;
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .invite-title i {
+            color: var(--primary-color);
+        }
+
+        .invite-form-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 20px;
+        }
+
+        .input-group {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .invite-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: white;
+            height: 42px;
+        }
+
+        .invite-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+            outline: none;
+        }
+
+        .invite-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 42px;
+            width: 100px;
+        }
+
+        .invite-button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .invite-button:active {
+            transform: translateY(0);
+        }
+
+    </style>
 </head>
 <body>
+
